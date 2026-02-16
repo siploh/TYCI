@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Signup Flip Card PRO</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.wrapper{
+  --input-focus:#2d8cf0;
+  --font-color:#323232;
+  --font-color-sub:#666;
+  --bg-color:#fff;
+  --main-color:#323232;
+}
+
+.switch{
+  transform:translateY(-200px);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:30px;
+  width:50px;
+  height:20px;
+}
+
+.card-side::before{
+  position:absolute;
+  content:'Log in';
+  left:-70px;
+  top:0;
+  width:100px;
+  text-decoration:underline;
+  color:var(--font-color);
+  font-weight:600;
+}
+
+.card-side::after{
+  position:absolute;
+  content:'Sign up';
+  left:70px;
+  top:0;
+  width:100px;
+  color:var(--font-color);
+  font-weight:600;
+}
+
+.toggle{opacity:0;width:0;height:0;}
+
+.slider{
+  border-radius:5px;
+  border:2px solid var(--main-color);
+  box-shadow:4px 4px var(--main-color);
+  position:absolute;
+  cursor:pointer;
+  inset:0;
+  background-color:var(--bg-color);
+  transition:.3s;
+}
+
+.slider:before{
+  position:absolute;
+  content:"";
+  height:20px;
+  width:20px;
+  border:2px solid var(--main-color);
+  border-radius:5px;
+  left:-2px;
+  bottom:2px;
+  background-color:var(--bg-color);
+  box-shadow:0 3px 0 var(--main-color);
+  transition:.3s;
+}
+
+.toggle:checked + .slider{background-color:var(--input-focus);}
+.toggle:checked + .slider:before{transform:translateX(30px);}
+.toggle:checked ~ .card-side:before{text-decoration:none;}
+.toggle:checked ~ .card-side:after{text-decoration:underline;}
+
+.flip-card__inner{
+  width:300px;
+  height:350px;
+  position:relative;
+  perspective:1000px;
+  transition:.8s;
+  transform-style:preserve-3d;
+}
+
+.toggle:checked ~ .flip-card__inner{transform:rotateY(180deg);}
+
+.flip-card__front,.flip-card__back{
+  width:100%;
+  padding:20px;
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  backface-visibility:hidden;
+  background:lightgrey;
+  gap:20px;
+  border-radius:5px;
+  border:2px solid var(--main-color);
+  box-shadow:4px 4px var(--main-color);
+}
+
+.flip-card__back{transform:rotateY(180deg);}
+
+.flip-card__form{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
+}
+
+.title{
+  margin:20px 0;
+  font-size:25px;
+  font-weight:900;
+  color:var(--main-color);
+}
+
+.flip-card__input{
+  width:250px;
+  height:40px;
+  border-radius:5px;
+  border:2px solid var(--main-color);
+  background-color:var(--bg-color);
+  box-shadow:4px 4px var(--main-color);
+  font-size:15px;
+  font-weight:600;
+  padding:5px 10px;
+}
+
+.flip-card__btn{
+  margin:20px 0;
+  width:120px;
+  height:40px;
+  border-radius:5px;
+  border:2px solid var(--main-color);
+  background-color:var(--bg-color);
+  box-shadow:4px 4px var(--main-color);
+  font-size:17px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.loading{
+  pointer-events:none;
+  opacity:.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+<div class="card-switch">
+<label class="switch">
+
+<input type="checkbox" class="toggle">
+<span class="slider"></span>
+<span class="card-side"></span>
+
+<div class="flip-card__inner">
+
+<!-- LOGIN -->
+<div class="flip-card__front">
+<div class="title">Log in</div>
+<form class="flip-card__form" id="loginForm">
+<input class="flip-card__input" name="email" placeholder="Email" type="email" required>
+<input class="flip-card__input" name="password" placeholder="Password" type="password" required>
+<button class="flip-card__btn">Let`s go!</button>
+</form>
+</div>
+
+<!-- REGISTER -->
+<div class="flip-card__back">
+<div class="title">Sign up</div>
+<form class="flip-card__form" id="registerForm">
+<input class="flip-card__input" name="nama" placeholder="Name" required>
+<input class="flip-card__input" name="email" placeholder="Email" type="email" required>
+<input class="flip-card__input" name="password" placeholder="Password" type="password" required>
+<button class="flip-card__btn">Confirm!</button>
+</form>
+</div>
+
+</div>
+</label>
+</div>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbzljnsO9jZ4BvlUJrTnxuzklVShuwOOAidC8c4iqIERV7sHgT9suRsO3HhMYomfus-E/exec"; // ganti dengan URL Apps Script kamu
+
+// fungsi umum untuk form submit
+async function handleForm(e, action){
+  e.preventDefault();
+  const btn = e.target.querySelector("button");
+  if(btn.disabled) return; // anti double klik
+  btn.disabled=true;
+  btn.classList.add("loading");
+  const originalText = btn.innerText;
+  btn.innerText="Loading...";
+
+  try{
+    const formData={};
+    for(let el of e.target.elements){
+      if(el.name) formData[el.name]=el.value;
+    }
+    formData.action=action;
+
+    const res=await fetch(API,{
+      method:"POST",
+      body:JSON.stringify(formData)
+    });
+    const data=await res.json();
+
+    if(action==="register"){
+      if(data.status==="success") alert("Register berhasil");
+      else if(data.status==="exist") alert("Email sudah terdaftar");
+    }else if(action==="login"){
+      if(data.status==="success"){
+        alert("Login berhasil");
+        // location.href="dashboard.html"; // redirect jika perlu
+      }else{
+        alert("Email / Password salah");
+      }
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("Terjadi kesalahan, coba lagi!");
+  }finally{
+    btn.disabled=false;
+    btn.classList.remove("loading");
+    btn.innerText=originalText;
+  }
+}
+
+// pasang event listener
+document.getElementById("registerForm").addEventListener("submit", e=>handleForm(e,"register"));
+document.getElementById("loginForm").addEventListener("submit", e=>handleForm(e,"login"));
+</script>
+
+</body>
+</html>
